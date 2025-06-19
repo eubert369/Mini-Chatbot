@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import ChatComponent from "./components/ChatComponent.vue";
+import { ref, type TextareaHTMLAttributes } from "vue";
 import { marked } from "marked";
+import ChatComponent from "./components/ChatComponent.vue";
+import LoadingComponent from "./components/LoadingComponent.vue";
 
 export interface chatTypes {
   msg: string;
@@ -13,32 +14,52 @@ interface APIResponse {
   response: string;
 }
 
-const currentChat = ref<string>("");
+useHead({
+  title: "Mini Chatbot",
+  link: [
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      href: "/logoIcon.svg",
+    },
+  ],
+});
 
+const currentChat = ref<string>("");
+const isLoading = ref<boolean>(false);
 const chats = ref<chatTypes[]>([]);
 
 const submitChat = async () => {
   chats.value = [...chats.value, { msg: currentChat.value, received: false }];
+  isLoading.value = true;
+  currentChat.value = "";
   try {
-    const req = await useFetch<APIResponse>("/api/chat", {
+    const req = await $fetch<APIResponse>("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messageContent: currentChat.value,
+        messageContent: chats.value[chats.value.length - 1].msg,
       }),
     });
 
-    if (req.data.value && req.status.value == "success") {
-      console.log("data:", req.data.value.response);
+    if (req.response) {
+      isLoading.value = false;
       chats.value = [
         ...chats.value,
-        { msg: `${marked.parse(req.data.value.response)}`, received: true },
+        { msg: `${marked.parse(req.response)}`, received: true },
       ];
     }
   } catch (error) {
     console.error(error);
+  }
+};
+
+const submitKey = (event: KeyboardEvent) => {
+  if (event.key == "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    submitChat();
   }
 };
 </script>
@@ -65,6 +86,7 @@ const submitChat = async () => {
             How can I help you today?
           </p>
         </div>
+        <LoadingComponent v-if="isLoading" />
       </div>
 
       <form
@@ -74,6 +96,7 @@ const submitChat = async () => {
         <textarea
           class="w-full h-fit p-4 font-sans text-base text-[#ECDFCC] focus:outline-none resize-none"
           v-model="currentChat"
+          @keydown="submitKey"
           placeholder="Send a message"
           rows="2"
         />
@@ -89,3 +112,32 @@ const submitChat = async () => {
     </div>
   </div>
 </template>
+
+<style>
+pre {
+  background-color: #2e2e2e;
+  color: #f8f8f2;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  padding: 16px;
+  border-radius: 4px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+li {
+  margin-left: 8px;
+}
+
+table tr th {
+  border-width: 1px;
+  border-color: white;
+  padding: 4px;
+}
+
+table tr td {
+  padding: 4px;
+  border-width: 1px;
+  border-color: white;
+}
+</style>

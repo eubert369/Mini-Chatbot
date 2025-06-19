@@ -10,8 +10,8 @@ defineProps<chatTypes>();
   >
     <div
       :class="`${
-        received ? 'text-[#ECDFCC]' : 'bg-[#ECDFCC] text-[#181C14'
-      } w-fit max-w-[80%] h-fit rounded p-2 text-base font-sans`"
+        received ? 'text-[#ECDFCC] space-y-4' : 'bg-[#ECDFCC] text-[#181C14]'
+      } w-fit max-w-[80%] h-fit rounded-lg p-2 text-base font-sans`"
       v-html="msg"
     ></div>
   </div>
