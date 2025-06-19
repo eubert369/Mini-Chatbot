@@ -30,7 +30,14 @@ const chats = ref<chatTypes[]>([
           chats.length > 0 ? '' : 'justify-center'
         } overflow-y-auto`"
       >
-        <div v-if="chats.length == 0" class="w-full h-fit flex flex-col">
+        <ChatComponent
+          v-if="chats.length > 0"
+          v-for="(chat, id) in chats"
+          :key="id"
+          :received="chat.received"
+          :msg="chat.msg"
+        />
+        <div v-else class="w-full h-fit flex flex-col">
           <h1 class="font-sans font-bold text-[#ECDFCC] text-4xl">
             Hello there!
           </h1>
@@ -38,13 +45,6 @@ const chats = ref<chatTypes[]>([
             How can I help you today?
           </p>
         </div>
-        <ChatComponent
-          v-else
-          v-for="(chat, id) in chats"
-          :key="id"
-          :received="chat.received"
-          :msg="chat.msg"
-        />
       </div>
 
       <div

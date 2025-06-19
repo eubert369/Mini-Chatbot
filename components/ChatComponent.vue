@@ -11,7 +11,7 @@ defineProps<chatTypes>();
     <div
       :class="`${
         received ? '' : 'bg-[#ECDFCC]'
-      } w-fit max-w-2/3 h-fit rounded p-2`"
+      } w-fit max-w-[80%] h-fit rounded p-2`"
     >
       <p
         :class="`text-base font-sans ${
