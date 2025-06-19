@@ -1,26 +1,46 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import chatComponent from "./components/ChatComponent.vue";
+import ChatComponent from "./components/ChatComponent.vue";
+import { marked } from "marked";
 
 export interface chatTypes {
   msg: string;
   received: boolean;
 }
 
-const chats = ref<chatTypes[]>([
-  {
-    msg: "Help me write an essay about the pros and cons of AI",
-    received: false,
-  },
-  {
-    msg: "Eligendi consectetur aut placeat ullam ea. Voluptas praesentium  beatae nihil facilis voluptatem ab facilis. Eos voluptas commodi unde  atque possimus. Maxime reprehenderit ea vitae itaque eos quo. Blanditiis optio neque voluptas. Adipisci placeat magni  occaecati quas et nobis laboriosam. Assumenda atque alias nihil  sapiente. Et ut similique repellat exercitationem minus velit tempora. Et et eius eos. Est magnam optio sed ad. Et cum culpa molestiae fugit ut corporis. Deserunt occaecati officiis in dicta cupiditate enim tempora ea. Praesentium enim nam sint qui facere voluptatibus. Quaerat a  ipsum autem. Consequatur dolorem voluptatem et dolorem sit debitis. Et  possimus reiciendis inventore error quia ea hic. Quia rerum ullam est  eum. Velit doloribus alias doloremque nostrum facere aut.'",
-    received: true,
-  },
-  {
-    msg: "Eligendi consectetur aut placeat ullam ea. Voluptas praesentium  beatae nihil facilis voluptatem ab facilis. Eos voluptas commodi unde  atque possimus. Maxime reprehenderit ea vitae itaque eos quo. Blanditiis optio neque voluptas. Adipisci placeat magni  occaecati quas et nobis laboriosam. Assumenda atque alias nihil  sapiente. Et ut similique repellat exercitationem minus velit tempora. Et et eius eos. Est magnam optio sed ad. Et cum culpa molestiae fugit ut corporis. Deserunt occaecati officiis in dicta cupiditate enim tempora ea. Praesentium enim nam sint qui facere voluptatibus. Quaerat a  ipsum autem. Consequatur dolorem voluptatem et dolorem sit debitis. Et  possimus reiciendis inventore error quia ea hic. Quia rerum ullam est  eum. Velit doloribus alias doloremque nostrum facere aut.'",
-    received: false,
-  },
-]);
+interface APIResponse {
+  timestamp: string;
+  response: string;
+}
+
+const currentChat = ref<string>("");
+
+const chats = ref<chatTypes[]>([]);
+
+const submitChat = async () => {
+  chats.value = [...chats.value, { msg: currentChat.value, received: false }];
+  try {
+    const req = await useFetch<APIResponse>("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messageContent: currentChat.value,
+      }),
+    });
+
+    if (req.data.value && req.status.value == "success") {
+      console.log("data:", req.data.value.response);
+      chats.value = [
+        ...chats.value,
+        { msg: `${marked.parse(req.data.value.response)}`, received: true },
+      ];
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 </script>
 <template>
   <div class="bg-[#181C14] w-full h-screen">
@@ -47,23 +67,25 @@ const chats = ref<chatTypes[]>([
         </div>
       </div>
 
-      <div
+      <form
+        @submit.prevent="submitChat"
         class="w-full h-fit flex flex-col gap-1 border border-[#ECDFCC] rounded-[20px]"
       >
         <textarea
           class="w-full h-fit p-4 font-sans text-base text-[#ECDFCC] focus:outline-none resize-none"
+          v-model="currentChat"
           placeholder="Send a message"
           rows="2"
         />
         <div class="w-full h-fit px-4 py-2 flex items-center justify-end">
           <button
-            type="button"
+            type="submit"
             class="bg-[#ECDFCC] w-fit rounded-full h-fit p-2 cursor-pointer"
           >
             <img class="w-4 h-4" src="assets/img/send.svg" alt="send icon" />
           </button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
