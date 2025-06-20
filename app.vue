@@ -30,29 +30,31 @@ const isLoading = ref<boolean>(false);
 const chats = ref<chatTypes[]>([]);
 
 const submitChat = async () => {
-  chats.value = [...chats.value, { msg: currentChat.value, received: false }];
-  isLoading.value = true;
-  currentChat.value = "";
-  try {
-    const req = await $fetch<APIResponse>("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messageContent: chats.value[chats.value.length - 1].msg,
-      }),
-    });
+  if (currentChat.value.length > 0) {
+    chats.value = [...chats.value, { msg: currentChat.value, received: false }];
+    isLoading.value = true;
+    currentChat.value = "";
+    try {
+      const req = await $fetch<APIResponse>("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messageContent: chats.value[chats.value.length - 1].msg,
+        }),
+      });
 
-    if (req.response) {
-      isLoading.value = false;
-      chats.value = [
-        ...chats.value,
-        { msg: `${marked.parse(req.response)}`, received: true },
-      ];
+      if (req.response) {
+        isLoading.value = false;
+        chats.value = [
+          ...chats.value,
+          { msg: `${marked.parse(req.response)}`, received: true },
+        ];
+      }
+    } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
   }
 };
 
